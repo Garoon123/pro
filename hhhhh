@@ -1,0 +1,83 @@
+ <div class="container-fluid py-5 mt-5">
+     <div class="container py-5">
+         <div class="row g-4 mb-5">
+             <div class="col-lg-12 col-xl-9">
+                 <div class="row g-4">
+                     <div class="col-lg-6">
+                         <div class="border rounded">
+                             <a href="#">
+                                 <img src="<?php echo $pitch['image']; ?>" class="img-fluid rounded" alt="Image">
+                             </a>
+                         </div>
+                     </div>
+                     <div class="col-lg-6">
+                         <h4 class="fw-bold mb-3"><?php echo $pitch['name']; ?></h4>
+                         <p class="mb-3">Goobta: <?php echo $location_name . ', ' . $xaafada_name; ?></p>
+                         <h5 class="fw-bold mb-3"><?php echo 'Lacagta: ' . $pitch['price_per_hour']; ?>$ / Team</h5>
+                         <h5 class="fw-bold mb-3"><?php echo 'Ciyaartoyda: ' . $pitch['type'] . ' / ' . $pitch['type']; ?></h5>
+                         <div class="d-flex mb-4">
+                             <i class="fa fa-phone text-secondary"></i>
+                             <h3><span><?php echo $pitch['phone_number']; ?></span></h3>
+                         </div>
+                         <div class="mb-4">
+                             <?php foreach ($available_slots as $slot) { ?>
+                                 <button class="btn btn-primary mb-2 select-time-btn" data-toggle="modal" data-target="#phoneModal" data-time="<?php echo $slot; ?>">
+                                     <?php echo $slot; ?>
+                                 </button>
+                             <?php } ?>
+                         </div>
+                         <a class="btn btn-outline-light" href="tel:<?php echo $pitch['phone_number']; ?>">Wac hadda</a>
+                     </div>
+                 </div>
+             </div>
+             <div class="col-xl-3 col-lg-12">
+                 <div class="row g-4">
+                     <div class="col-lg-12">
+                         <h5 class="fw-bold mb-3">Garoonyada kale</h5>
+                         <?php foreach ($nearby_pitches as $nearby_pitch) { ?>
+                             <a href="#" class="d-block border rounded overflow-hidden mb-3">
+                                 <div class="row g-0">
+                                     <div class="col-sm-4">
+                                         <img src="<?php echo $nearby_pitch['image']; ?>" class="img-fluid rounded" alt="Image">
+                                     </div>
+                                     <div class="col-sm-8">
+                                         <div class="text-secondary p-3">
+                                             <h5 class="fw-bold mb-2"><?php echo $nearby_pitch['name']; ?></h5>
+                                             <p class="mb-2"><?php echo $nearby_pitch['price_per_hour']; ?>$ / Team</p>
+                                             <p class="mb-0"><i class="fa fa-map-marker-alt me-2"></i><?php echo $location_name . ', ' . $xaafada_name; ?></p>
+                                         </div>
+                                     </div>
+                                 </div>
+                             </a>
+                         <?php } ?>
+                     </div>
+                     <div class="col-lg-12">
+                         <h5 class="fw-bold mb-3">Waqtiyada ka banaan</h5>
+                         <?php foreach ($available_slots as $slot) { ?>
+                             <button class="btn btn-primary mb-2 select-time-btn" data-toggle="modal" data-target="#phoneModal" data-time="<?php echo $slot; ?>">
+                                 <?php echo $slot; ?>
+                             </button>
+                         <?php } ?>
+                     </div>
+                 </div>
+             </div>
+         </div>
+         <div class="modal fade" id="phoneModal" tabindex="-1" role="dialog" aria-labelledby="phoneModalLabel" aria-hidden="true">
+             <div class="modal-dialog modal-dialog-centered" role="document">
+                 <div class="modal-content">
+                     <div class="modal-header">
+                         <h5 class="modal-title" id="phoneModalLabel">Soo wac <?php echo $pitch['name']; ?></h5>
+                         <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                             <span aria-hidden="true">&times;</span>
+                         </button>
+                     </div>
+                     <div class="modal-body">
+                         <p>Fadlan soo wac nambarka hoose si aad u dalbato garoonka waqtiga: <span id="selectedTime"></span></p>
+                         <p><i class="fa fa-phone text-secondary"></i> <?php echo $pitch['phone_number']; ?></p>
+                         <a class="btn btn-primary btn-block" href="tel:<?php echo $pitch['phone_number']; ?>">Wac hadda</a>
+                     </div>
+                 </div>
+             </div>
+         </div>
+     </div>
+ </div>

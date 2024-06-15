@@ -1,0 +1,9 @@
+RewriteEngine On
+
+# Rewrite URLs to add .php extension
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteRule ^([^\.]+)$ $1.php [NC,L]
+
+# Rewrite requests for /garoon/hire to /garoon/hire.php
+RewriteRule ^garoon/hire$ garoon/hire.php [L]
