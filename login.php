@@ -17,11 +17,14 @@ if (isset($_COOKIE['remember_token'])) {
             $_SESSION['user_id'] = $user['user_id'];
             $_SESSION['user_type'] = $user['user_type'];
             $_SESSION['location'] = $user['location_id'];
-            // Redirect to index or desired page
-            $redirect_to = isset($_SESSION['redirect_to']) ? $_SESSION['redirect_to'] : 'index';
-            unset($_SESSION['redirect_to']); // Clear the session variable
-            header("Location: index");
-            exit();
+
+            if ($user_type == 'admin') {
+                header("Location: admin_dashboard");
+                exit();
+            } else {
+                header("Location: admin_dashboard");
+                exit();
+            }
         }
     }
 }

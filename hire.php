@@ -3,7 +3,6 @@ session_start();
 require './includes/conn.php';
 require './includes/header.php';
 
-// Redirect to login if user is not logged in
 if (!isset($_SESSION['user_id'])) {
     $_SESSION['redirect_to'] = 'pitch.php?single-pitch=' . $_POST['single-pitch'];
     header('location: login.php');
@@ -16,78 +15,85 @@ $location_name = '';
 $xaafada_name = '';
 $nearby_pitches = [];
 
-// Check if the request method is POST and 'single-pitch' is set
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['single-pitch'])) {
-    $pitch_id = $_POST['single-pitch'];
-    $query = "SELECT * FROM pitches WHERE pitch_id = ?";
-    $stmt = $conn->prepare($query);
-    $stmt->bind_param("i", $pitch_id);
-    $stmt->execute();
-    $result_pitch = $stmt->get_result();
-    $pitch = $result_pitch->fetch_assoc();
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    if (isset($_POST['single-pitch'])) {
+        $pitch_id = $_POST['single-pitch'];
 
-    if ($pitch) {
-        $location_query = "SELECT town FROM locations WHERE location_id = ?";
-        $location_stmt = $conn->prepare($location_query);
-        $location_stmt->bind_param("i", $pitch['location_id']);
-        $location_stmt->execute();
-        $location_result = $location_stmt->get_result();
-        $location = $location_result->fetch_assoc();
-        $location_name = $location['town'];
-
-        // Fetch xaafada name
-        $xaafada_query = "SELECT xaafada FROM xaafada WHERE id = ?";
-        $xaafada_stmt = $conn->prepare($xaafada_query);
-        $xaafada_stmt->bind_param("i", $pitch['xaafada_id']);
-        $xaafada_stmt->execute();
-        $xaafada_result = $xaafada_stmt->get_result();
-        $xaafada = $xaafada_result->fetch_assoc();
-        $xaafada_name = $xaafada['xaafada'];
-
-        $query = "SELECT * FROM bookings WHERE pitch_id = ? AND booking_date = CURDATE()";
+        // Fetch pitch details
+        $query = "SELECT * FROM pitches WHERE pitch_id = ?";
         $stmt = $conn->prepare($query);
         $stmt->bind_param("i", $pitch_id);
         $stmt->execute();
-        $result_bookings = $stmt->get_result();
-        $today = date('Y-m-d');
-        $time_slots = ['16:30', '19:00', '20:00', '21:00', '22:00', '23:00']; // Adjust this array as needed
+        $result_pitch = $stmt->get_result();
+        $pitch = $result_pitch->fetch_assoc();
 
-        // Fetch booked slots without seconds
-        $booked_slots = [];
-        while ($row = $result_bookings->fetch_assoc()) {
-            $booked_slots[] = substr($row['start_time'], 0, 5); // Get only HH:MM
+        if ($pitch) {
+            // Fetch location name
+            $location_query = "SELECT town FROM locations WHERE location_id = ?";
+            $location_stmt = $conn->prepare($location_query);
+            $location_stmt->bind_param("i", $pitch['location_id']);
+            $location_stmt->execute();
+            $location_result = $location_stmt->get_result();
+            $location = $location_result->fetch_assoc();
+            $location_name = $location['town'];
+
+            // Fetch xaafada name
+            $xaafada_query = "SELECT xaafada FROM xaafada WHERE id = ?";
+            $xaafada_stmt = $conn->prepare($xaafada_query);
+            $xaafada_stmt->bind_param("i", $pitch['xaafada_id']);
+            $xaafada_stmt->execute();
+            $xaafada_result = $xaafada_stmt->get_result();
+            $xaafada = $xaafada_result->fetch_assoc();
+            $xaafada_name = $xaafada['xaafada'];
+
+            // Fetch bookings for today
+            $query = "SELECT * FROM bookings WHERE pitch_id = ? AND booking_date = CURDATE()";
+            $stmt = $conn->prepare($query);
+            $stmt->bind_param("i", $pitch_id);
+            $stmt->execute();
+            $result_bookings = $stmt->get_result();
+            $today = date('Y-m-d');
+            $time_slots = ['16:30', '19:00', '20:00', '21:00', '22:00', '23:00']; // Adjust this array as needed
+
+            // Fetch booked slots without seconds
+            $booked_slots = [];
+            while ($row = $result_bookings->fetch_assoc()) {
+                $booked_slots[] = substr($row['start_time'], 0, 5); // Get only HH:MM
+            }
+
+            // Filter out passed time slots
+            $current_time = date('H:i');
+            foreach ($time_slots as $slot) {
+                if ($slot >= $current_time && !in_array($slot, $booked_slots)) {
+                    $available_slots[] = $slot;
+                }
+            }
+
+            // Fetch recurring bookings
+            $recurring_query = "SELECT * FROM recurring_bookings WHERE pitch_id = ? AND day_of_week = DAYNAME(CURDATE())";
+            $recurring_stmt = $conn->prepare($recurring_query);
+            $recurring_stmt->bind_param("i", $pitch_id);
+            $recurring_stmt->execute();
+            $result_recurring = $recurring_stmt->get_result();
+            while ($row = $result_recurring->fetch_assoc()) {
+                $booked_slots[] = substr($row['start_time'], 0, 5); // Get only HH:MM
+            }
+
+            // Update available time slots
+            $available_slots = array_diff($available_slots, $booked_slots);
+
+            // Fetch nearby stadiums
+            $nearby_query = "SELECT * FROM pitches WHERE location_id = ? AND pitch_id != ?";
+            $nearby_stmt = $conn->prepare($nearby_query);
+            $nearby_stmt->bind_param("ii", $pitch['location_id'], $pitch_id);
+            $nearby_stmt->execute();
+            $nearby_result = $nearby_stmt->get_result();
+            $nearby_pitches = $nearby_result->fetch_all(MYSQLI_ASSOC);
+        } else {
+            echo "Error: Pitch information not found.";
+            exit;
         }
-
-        // Calculate available time slots
-        $available_slots = array_diff($time_slots, $booked_slots);
-
-        // Fetch recurring bookings
-        $recurring_query = "SELECT * FROM recurring_bookings WHERE pitch_id = ? AND day_of_week = DAYNAME(CURDATE())";
-        $recurring_stmt = $conn->prepare($recurring_query);
-        $recurring_stmt->bind_param("i", $pitch_id);
-        $recurring_stmt->execute();
-        $result_recurring = $recurring_stmt->get_result();
-        while ($row = $result_recurring->fetch_assoc()) {
-            $booked_slots[] = substr($row['start_time'], 0, 5); // Get only HH:MM
-        }
-
-        // Update available time slots
-        $available_slots = array_diff($time_slots, $booked_slots);
-
-        // Fetch nearby stadiums
-        $nearby_query = "SELECT * FROM pitches WHERE location_id = ? AND pitch_id != ?";
-        $nearby_stmt = $conn->prepare($nearby_query);
-        $nearby_stmt->bind_param("ii", $pitch['location_id'], $pitch_id);
-        $nearby_stmt->execute();
-        $nearby_result = $nearby_stmt->get_result();
-        $nearby_pitches = $nearby_result->fetch_all(MYSQLI_ASSOC);
-    } else {
-        echo "Error: Pitch information not found.";
-        exit;
     }
-} else {
-    echo 'No pitch id is found';
-    exit;
 }
 ?>
 <!DOCTYPE html>
@@ -115,7 +121,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['single-pitch'])) {
         <div class="spinner-grow text-primary" role="status"></div>
     </div> -->
     <div class="container-fluid fixed-top">
-
         <div class="container px-0">
             <nav class="navbar navbar-light bg-white navbar-expand-xl">
                 <a href="index" class="navbar-brand">
@@ -169,7 +174,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['single-pitch'])) {
     <div class="container-fluid py-5 mt-5">
         <div class="container py-5">
             <div class="row g-4 mb-5">
-                <div class="col-lg-12 col-xl-9">
+                <div class="col-lg-12 col-xl-12">
                     <div class="row g-4">
                         <div class="col-lg-6">
                             <div class="border rounded">
@@ -206,60 +211,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['single-pitch'])) {
 
                         </div>
                         <div class="col-lg-12">
-                            <nav>
-                                <div class="nav nav-tabs mb-3">
-                                    <button class="nav-link active border-white border-bottom-0" type="button" role="tab" id="nav-about-tab" data-toggle="tab" data-target="#nav-about" aria-controls="nav-about" aria-selected="true">Description</button>
-                                    <button class="nav-link border-white border-bottom-0" type="button" role="tab" id="nav-mission-tab" data-toggle="tab" data-target="#nav-mission" aria-controls="nav-mission" aria-selected="false">Reviews</button>
-                                </div>
-                            </nav>
-                            <div class="tab-content mb-5">
-                                <div class="tab-pane active" id="nav-about" role="tabpanel" aria-labelledby="nav-about-tab">
-                                    <p><?php echo $pitch['description']; ?></p>
-                                </div>
-                                <div class="tab-pane" id="nav-mission" role="tabpanel" aria-labelledby="nav-mission-tab">
-                                    <div class="d-flex">
-                                        <img src="img/avatar.jpg" class="img-fluid rounded-circle p-3" style="width: 100px; height: 100px;" alt="">
-                                        <div class="">
-                                            <p class="mb-2" style="font-size: 14px;">April 12, 2024</p>
-                                            <div class="d-flex justify-content-between">
-                                                <h5>Jason Smith</h5>
-                                                <div class="d-flex mb-3">
-                                                    <i class="fa fa-star text-secondary"></i>
-                                                    <i class="fa fa-star text-secondary"></i>
-                                                    <i class="fa fa-star text-secondary"></i>
-                                                    <i class="fa fa-star text-secondary"></i>
-                                                    <i class="fa fa-star"></i>
-                                                </div>
-                                            </div>
-                                            <p>The generated Lorem Ipsum is therefore always free from repetition injected humour, or non-characteristic
-                                                words etc. Susp endisse ultricies nisi vel quam suscipit </p>
-                                        </div>
-                                    </div>
-                                    <div class="d-flex">
-                                        <img src="img/avatar.jpg" class="img-fluid rounded-circle p-3" style="width: 100px; height: 100px;" alt="">
-                                        <div class="">
-                                            <p class="mb-2" style="font-size: 14px;">April 12, 2024</p>
-                                            <div class="d-flex justify-content-between">
-                                                <h5>Sam Peters</h5>
-                                                <div class="d-flex mb-3">
-                                                    <i class="fa fa-star text-secondary"></i>
-                                                    <i class="fa fa-star text-secondary"></i>
-                                                    <i class="fa fa-star text-secondary"></i>
-                                                    <i class="fa fa-star"></i>
-                                                    <i class="fa fa-star"></i>
-                                                </div>
-                                            </div>
-                                            <p class="text-dark">The generated Lorem Ipsum is therefore always free from repetition injected humour, or non-characteristic
-                                                words etc. Susp endisse ultricies nisi vel quam suscipit </p>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="tab-pane" id="nav-vision" role="tabpanel">
-                                    <p class="text-dark">Tempor erat elitr rebum at clita. Diam dolor diam ipsum et tempor sit. Aliqu diam
-                                        amet diam et eos labore. 3</p>
-                                    <p class="mb-0">Diam dolor diam ipsum et tempor sit. Aliqu diam amet diam et eos labore.
-                                        Clita erat ipsum et lorem et sit</p>
-                                </div>
+                            <div class="tab-pane active" id="nav-about" role="tabpanel" aria-labelledby="nav-about-tab">
+                                <p><?php echo $pitch['description']; ?></p>
                             </div>
                         </div>
                     </div>
@@ -271,7 +224,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['single-pitch'])) {
                     <?php foreach ($nearby_pitches as $nearby_pitch) { ?>
                         <div class="border border-primary rounded position-relative vesitable-item">
                             <div class="vesitable-img">
-                                <img src="img/vegetable-item-6.jpg" class="img-fluid w-100 rounded-top" alt="">
+                                <img src="<?php echo $nearby_pitch['image']; ?>" class="img-fluid w-100 rounded-top" alt="">
                             </div>
                             <div class="text-white bg-primary px-3 py-1 rounded position-absolute" style="top: 10px; right: 10px;"><?php echo $nearby_pitch['name']; ?></div>
                             <div class="p-4 pb-0 rounded-bottom">
@@ -436,6 +389,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['single-pitch'])) {
     <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             var selectTimeButtons = document.querySelectorAll('.select-time-btn');
@@ -449,6 +403,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['single-pitch'])) {
             });
         });
     </script>
+
     <script>
         $(document).ready(function() {
             $('#kiraysoModal').on('show.bs.modal', function(event) {
