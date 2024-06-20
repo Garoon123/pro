@@ -8,7 +8,7 @@ if (!isset($_SESSION['user_id']) || $_SESSION['user_type'] !== 'admin') {
 }
 
 $user_id = $_SESSION['user_id'];
-$sql_pitch = "SELECT pitch_id FROM pitches WHERE user_id = ?";
+$sql_pitch = "SELECT pitch_id,price_per_hour FROM pitches WHERE user_id = ?";
 $stmt_pitch = $conn->prepare($sql_pitch);
 $stmt_pitch->bind_param("i", $user_id);
 $stmt_pitch->execute();
@@ -17,6 +17,8 @@ $result_pitch = $stmt_pitch->get_result();
 if ($result_pitch->num_rows > 0) {
     $row_pitch = $result_pitch->fetch_assoc();
     $pitch_id = $row_pitch['pitch_id'];
+    $amount12 = $row_pitch['price_per_hour'];
+    $_SESSION['pitchId'] = $row_pitch['pitch_id'];
 } else {
     die("No pitch found for the user.");
 }
@@ -233,6 +235,7 @@ $available_slots = array_diff($time_slots, $booked_slots);
                         <a href="admin_dashboard" class="nav-item nav-link active">Home</a>
                         <a href="iixidh" class="nav-item nav-link">Iixidh</a>
                         <a href="customers" class="nav-item nav-link">Past Booking</a>
+                        <a href="reports" class="nav-item nav-link">Reports</a>
                         <a href="admin_contact" class="nav-item nav-link">Contact</a>
                     </div>
                     <div class="d-flex m-3 me-0">
@@ -254,22 +257,6 @@ $available_slots = array_diff($time_slots, $booked_slots);
             </nav>
         </div>
     </div>
-    <div class="modal fade" id="searchModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-fullscreen">
-            <div class="modal-content rounded-0">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="exampleModalLabel">Search by keyword</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body d-flex align-items-center">
-                    <div class="input-group w-75 mx-auto d-flex">
-                        <input type="search" class="form-control p-3" placeholder="keywords" aria-describedby="search-icon-1">
-                        <span id="search-icon-1" class="input-group-text p-3"><i class="fa fa-search"></i></span>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
     <div class="container-fluid py-5">
         <div class="container py-5">
             <nav>
@@ -285,7 +272,7 @@ $available_slots = array_diff($time_slots, $booked_slots);
                         if ($result_today->num_rows > 0) {
                             while ($row = $result_today->fetch_assoc()) {
                         ?>
-                                <div class='col-md-6 col-lg-4'>
+                                <div class='col-md-6 col-lg-6'>
                                     <div class='card booking-card mb-4 shadow-sm'>
                                         <div class='card-body'>
                                             <h5 class='card-title'><i class='bi bi-person-circle'></i> <?php echo htmlspecialchars($row["display_name"]); ?></i></h5>
@@ -297,11 +284,14 @@ $available_slots = array_diff($time_slots, $booked_slots);
                                                 <input type='hidden' name='booking_id' value="<?php echo htmlspecialchars($row["booking_id"]); ?>">
                                                 <button type='button' class='btn btn-success text-center update-status' data-booking-id="<?php echo htmlspecialchars($row["booking_id"]); ?>" value='confirmed'>Approve</button>
                                                 <button type='button' class='btn btn-danger update-status' data-booking-id="<?php echo htmlspecialchars($row["booking_id"]); ?>" value='cancelled'>Cancel</button>
+                                                <button type='button' class='btn btn-secondary edit-booking' data-booking-id="<?php echo htmlspecialchars($row["booking_id"]); ?>" data-pitch-id="<?php echo htmlspecialchars($row["booking_id"]); ?>">Edit</button>
                                                 <?php if ($row["payed"] - $row["total_price"] == 0 || $row["total_price"] - $row["payed"] < 0) { ?>
+                                                    <!-- If the condition is met, no additional button is shown -->
                                                 <?php } else { ?>
                                                     <button type='button' class='btn btn-primary take-money-btn' data-booking-id="<?php echo htmlspecialchars($row["booking_id"]); ?>">Take Money</button>
                                                 <?php } ?>
                                             </form>
+
                                         </div>
                                     </div>
                                 </div>
@@ -359,8 +349,6 @@ $available_slots = array_diff($time_slots, $booked_slots);
         <i class="bi bi-plus-lg" style="font-size: 30px;">+</i>
     </button>
 
-
-    <!-- Modal -->
     <div class="modal fade" id="saveBookingModal" tabindex="-1" aria-labelledby="saveBookingModalLabel" aria-hidden="true">
         <div class="modal-dialog">
             <div class="modal-content">
@@ -396,56 +384,38 @@ $available_slots = array_diff($time_slots, $booked_slots);
             </div>
         </div>
     </div>
-
-    <script>
-        document.querySelectorAll('.take-money-btn').forEach(button => {
-            button.addEventListener('click', function() {
-                const bookingId = this.getAttribute('data-booking-id');
-                document.getElementById('modalBookingId').value = bookingId;
-                new bootstrap.Modal(document.getElementById('saveBookingModal')).show();
-            });
-        });
-
-        document.getElementById('saveBookingForm').addEventListener('submit', function(event) {
-            event.preventDefault();
-            const formData = new FormData(this);
-            fetch('save_booking.php', {
-                method: 'POST',
-                body: formData
-            }).then(response => response.text()).then(data => {
-                alert(data);
-                location.reload();
-            }).catch(error => console.error('Error:', error));
-        });
-    </script>
-
+    <!-- Modal -->
     <div class="modal fade" id="takeMoneyModal" tabindex="-1" aria-labelledby="takeMoneyModalLabel" aria-hidden="true">
         <div class="modal-dialog">
             <div class="modal-content">
-                <form id="takeMoneyForm" method="POST" action="process_payment.php">
-                    <div class="modal-header">
-                        <h5 class="modal-title" id="takeMoneyModalLabel">Take Money</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                    </div>
-                    <div class="modal-body">
-                        <input type="hidden" name="booking_id" id="bookingIdInput">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="takeMoneyModalLabel">Take Money</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="takeMoneyForm" method="POST" action="take_money.php">
+                        <input type="hidden" id="booking_id" name="booking_id">
                         <div class="mb-3">
-                            <label for="amountInput" class="form-label">Amount</label>
-                            <input type="number" class="form-control" id="amountInput" name="amount" required>
+                            <label for="amount" class="form-label">Amount:</label>
+                            <input type="number" class="form-control" id="amount" name="amount" required>
                         </div>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                        <button type="submit" class="btn btn-primary">Submit</button>
-                    </div>
-                </form>
+                        <button type="submit" class="btn btn-primary">Take Money</button>
+                    </form>
+                </div>
             </div>
         </div>
     </div>
+
     <!-- Booking Page End -->
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+    <!-- Include jQuery and Bootstrap JS -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+
     <script>
         $(document).ready(function() {
+            // Handle booking status updates
             $('.update-status').click(function(e) {
                 e.preventDefault();
 
@@ -517,64 +487,67 @@ $available_slots = array_diff($time_slots, $booked_slots);
                 }
             });
 
-            $('.take-money-btn').on('click', function() {
+            // Handle editing a booking
+            $('.edit-booking').on('click', function() {
                 var bookingId = $(this).data('booking-id');
-                $('#bookingIdInput').val(bookingId);
-                $('#takeMoneyModal').modal('show');
+                var pitchId = $(this).data('pitch-id');
+
+                var form = $('<form>', {
+                    'method': 'POST',
+                    'action': 'edit_booking'
+                }).append($('<input>', {
+                    'type': 'hidden',
+                    'name': 'booking_id',
+                    'value': bookingId
+                })).append($('<input>', {
+                    'type': 'hidden',
+                    'name': 'pitch_id',
+                    'value': pitchId
+                }));
+
+                $('body').append(form);
+                form.submit();
             });
-        });
-    </script>
-    <!-- Modal -->
 
-    <!-- Modal -->
-    <div class="modal fade" id="saveBookingModal" tabindex="-1" aria-labelledby="saveBookingModalLabel" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="saveBookingModalLabel">Save Booking</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <form id="saveBookingForm">
-                        <input type="hidden" name="booking_id" id="modalBookingId">
-                        <div class="mb-3">
-                            <label for="amount" class="form-label">Amount</label>
-                            <input type="number" class="form-control" id="amount" name="amount" required>
-                        </div>
-                        <div class="mb-3">
-                            <label for="timeSlot" class="form-label">Available Time Slots</label>
-                            <select class="form-select" id="timeSlot" name="time_slot" required>
-                                <?php foreach ($available_slots as $slot) {
-                                    echo "<option value='$slot'>$slot</option>";
-                                } ?>
-                            </select>
-                        </div>
-                        <button type="submit" class="btn btn-primary">Save changes</button>
-                    </form>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <script>
-        document.querySelectorAll('.take-money-btn').forEach(button => {
-            button.addEventListener('click', function() {
-                const bookingId = this.getAttribute('data-booking-id');
-                document.getElementById('modalBookingId').value = bookingId;
-                new bootstrap.Modal(document.getElementById('saveBookingModal')).show();
+            // Ensure only one event listener for Take Money buttons
+            $('.take-money-btn').on('click', function() {
+                const bookingId = $(this).data('booking-id');
+                document.getElementById('booking_id').value = bookingId;
+                const takeMoneyModal = new bootstrap.Modal(document.getElementById('takeMoneyModal'));
+                takeMoneyModal.show();
             });
-        });
 
-        document.getElementById('saveBookingForm').addEventListener('submit', function(event) {
-            event.preventDefault();
-            const formData = new FormData(this);
-            fetch('save_booking.php', {
-                method: 'POST',
-                body: formData
-            }).then(response => response.text()).then(data => {
-                alert(data);
-                location.reload();
-            }).catch(error => console.error('Error:', error));
+            // Handle Save Booking Form submission
+            $('#saveBookingForm').on('submit', function(event) {
+                event.preventDefault();
+                const formData = new FormData(this);
+                fetch('save_booking.php', {
+                        method: 'POST',
+                        body: formData
+                    })
+                    .then(response => response.text())
+                    .then(data => {
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Booking saved successfully.',
+                            showConfirmButton: false,
+                            timer: 1500,
+                            timerProgressBar: true
+                        });
+                        setTimeout(() => {
+                            location.reload();
+                        }, 1500); // Reload after 1.5 seconds
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: 'An error occurred while saving the booking. Please try again later.',
+                            showConfirmButton: true
+                        });
+                    });
+            });
         });
     </script>
 

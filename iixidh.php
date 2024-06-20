@@ -25,11 +25,8 @@ if ($result_pitch->num_rows > 0) {
     die("No pitch found for the user.");
 }
 
-// Get today's and tomorrow's dates
 $today = date('l');
 $tomorrow = date('l', strtotime('+1 day'));
-
-// Fetch recurring bookings for today and tomorrow
 $recurring_bookings_sql = "
     SELECT rb.recurring_booking_id,
            u.full_name,
@@ -56,6 +53,8 @@ while ($row = $result_recurring_bookings->fetch_assoc()) {
     }
     $bookings_by_day[$day][] = $row;
 }
+
+
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -75,51 +74,9 @@ while ($row = $result_recurring_bookings->fetch_assoc()) {
     <link href="lib/owlcarousel/assets/owl.carousel.min.css" rel="stylesheet">
     <link href="css/bootstrap.min.css" rel="stylesheet">
     <link href="css/style.css" rel="stylesheet">
-    <!-- Include SweetAlert CSS -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
-
-    <!-- Include SweetAlert JS -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
-    <style>
-        .booking-card {
-            border-radius: 15px;
-            overflow: hidden;
-            transition: transform 0.2s;
-        }
-
-        .booking-card:hover {
-            transform: scale(1.05);
-        }
-
-        .booking-card .card-body {
-            padding: 20px;
-        }
-
-        .booking-card .card-title {
-            font-size: 1.25rem;
-            font-weight: 700;
-            color: #007bff;
-        }
-
-        .booking-card .card-text {
-            margin: 0.5rem 0;
-        }
-
-        .booking-card .card-text strong {
-            color: #333;
-        }
-
-        .nav-tabs {
-            white-space: nowrap;
-            overflow-x: auto;
-            -webkit-overflow-scrolling: touch;
-        }
-
-        .nav-tabs .nav-link {
-            display: inline-block;
-        }
-    </style>
 </head>
 
 <body>
@@ -175,8 +132,7 @@ while ($row = $result_recurring_bookings->fetch_assoc()) {
             </div>
         </div>
     </div>
-    <!-- Modal Search End -->
-    <!-- Booking Page Start -->
+
     <div class="container-fluid py-5">
         <div class="container py-5">
             <!-- Tabs Navigation -->
@@ -188,21 +144,29 @@ while ($row = $result_recurring_bookings->fetch_assoc()) {
                     <button class="nav-link" id="tomorrow-tab" data-bs-toggle="tab" data-bs-target="#tomorrow" type="button" role="tab" aria-controls="tomorrow" aria-selected="false">Tomorrow</button>
                 </li>
             </ul>
-            <div class="tab-content" id="myTabContent">
+            <div class="tab-content mt-5" id="myTabContent">
                 <div class="tab-pane fade show active" id="today" role="tabpanel" aria-labelledby="today-tab">
                     <div class="row">
                         <?php
                         if (isset($bookings_by_day[$today])) {
                             foreach ($bookings_by_day[$today] as $booking) {
-                                echo "<div class='col-md-6 col-lg-4'>
-                                        <div class='card booking-card mb-4 shadow-sm'>
-                                            <div class='card-body'>
-                                                <h5 class='card-title'><i class='bi bi-person-circle'></i> " . htmlspecialchars($booking["full_name"]) . "</h5>
-                                                <h5 class='card-text'><i class='bi bi-telephone'></i> <strong>Phone Number:</strong> " . htmlspecialchars($booking["phone_number"]) . "</h5>
-                                           <h5 class='card-text'><i class='bi bi-clock'></i> <strong>Time:</strong> " . htmlspecialchars(formatTime($booking["start_time"])) . " - " . htmlspecialchars(formatTime($booking["end_time"])) . "</h5>;
-                                                </div>
+                        ?>
+                                <div class='col-md-6 col-lg-4'>
+                                    <div class='card booking-card mb-4 shadow-sm'>
+                                        <div class='card-body'>
+                                            <h5 class='card-title'><i class='bi bi-person-circle'></i> <?php echo htmlspecialchars($booking["full_name"]); ?></h5>
+                                            <h5 class='card-text'><i class='bi bi-telephone'></i> <strong>Phone Number:</strong> <?php echo htmlspecialchars($booking["phone_number"]); ?></h5>
+                                            <h5 class='card-text'><i class='bi bi-clock'></i> <strong>Time:</strong> <?php echo htmlspecialchars(formatTime($booking["start_time"])); ?> - <?php echo htmlspecialchars(formatTime($booking["end_time"])); ?></h5>
                                         </div>
-                                    </div>";
+                                        <div class='card-footer d-flex justify-content-center'>
+                                            <form action="booking.php" method="post">
+                                                <input type="hidden" name="id" id="id" value="<?php echo $booking["recurring_booking_id"]; ?>">
+                                                <button class='btn btn-primary book-btn'>Book</button>
+                                            </form>
+                                        </div>
+                                    </div>
+                                </div>
+                        <?php
                             }
                         } else {
                             echo "<div class='col-12'><p>No recurring bookings found for today.</p></div>";
@@ -215,15 +179,23 @@ while ($row = $result_recurring_bookings->fetch_assoc()) {
                         <?php
                         if (isset($bookings_by_day[$tomorrow])) {
                             foreach ($bookings_by_day[$tomorrow] as $booking) {
-                                echo "<div class='col-md-6 col-lg-4'>
-                                        <div class='card booking-card mb-4 shadow-sm'>
-                                            <div class='card-body'>
-                                                <h5 class='card-title'><i class='bi bi-person-circle'></i> " . htmlspecialchars($booking["full_name"]) . "</h5>
-                                                <h5 class='card-text'><i class='bi bi-telephone'></i> <strong>Phone Number:</strong> " . htmlspecialchars($booking["phone_number"]) . "</h5>
-                                                <h5 class='card-text'><i class='bi bi-clock'></i> <strong>Time:</strong> " . htmlspecialchars($booking["start_time"]) . " - " . htmlspecialchars($booking["end_time"]) . "</h5>
-                                            </div>
+                        ?>
+                                <div class='col-md-6 col-lg-4'>
+                                    <div class='card booking-card mb-4 shadow-sm'>
+                                        <div class='card-body'>
+                                            <h5 class='card-title'><i class='bi bi-person-circle'></i> <?php echo htmlspecialchars($booking["full_name"]); ?></h5>
+                                            <h5 class='card-text'><i class='bi bi-telephone'></i> <strong>Phone Number:</strong> <?php echo htmlspecialchars($booking["phone_number"]); ?></h5>
+                                            <h5 class='card-text'><i class='bi bi-clock'></i> <strong>Time:</strong> <?php echo htmlspecialchars($booking["start_time"]); ?> - <?php echo htmlspecialchars($booking["end_time"]); ?></h5>
                                         </div>
-                                    </div>";
+                                        <div class='card-footer d-flex justify-content-center'>
+                                            <form action="booking.php" method="post">
+                                                <input type="hidden" name="id" id="id" value="<?php echo $booking["recurring_booking_id"]; ?>">
+                                                <button class='btn btn-primary book-btn'>Book</button>
+                                            </form>
+                                        </div>
+                                    </div>
+                                </div>
+                        <?php
                             }
                         } else {
                             echo "<div class='col-12'><p>No recurring bookings found for tomorrow.</p></div>";
@@ -234,94 +206,9 @@ while ($row = $result_recurring_bookings->fetch_assoc()) {
             </div>
         </div>
     </div>
-    <!-- Booking Page End -->
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script>
-        $(document).ready(function() {
-            $('.update-status').click(function(e) {
-                e.preventDefault();
-
-                var bookingId = $(this).data('booking-id');
-                var newStatus = $(this).val();
-
-                if (newStatus === 'cancelled') {
-                    Swal.fire({
-                        title: 'Are you sure?',
-                        text: "Do you really want to cancel this booking?",
-                        icon: 'warning',
-                        showCancelButton: true,
-                        confirmButtonColor: '#3085d6',
-                        cancelButtonColor: '#d33',
-                        confirmButtonText: 'Yes, cancel it!'
-                    }).then((result) => {
-                        if (result.isConfirmed) {
-                            $.ajax({
-                                url: 'update_booking_status.php',
-                                type: 'POST',
-                                data: {
-                                    booking_id: bookingId,
-                                    status: newStatus
-                                },
-                                success: function(response) {
-                                    Swal.fire(
-                                        'Cancelled!',
-                                        'Booking status has been updated.',
-                                        'success'
-                                    ).then(() => {
-                                        location.reload();
-                                    });
-                                },
-                                error: function() {
-                                    Swal.fire(
-                                        'Error!',
-                                        'An error occurred while updating the booking status.',
-                                        'error'
-                                    );
-                                }
-                            });
-                        }
-                    });
-                } else {
-                    $.ajax({
-                        url: 'update_booking_status.php',
-                        type: 'POST',
-                        data: {
-                            booking_id: bookingId,
-                            status: newStatus
-                        },
-                        success: function(response) {
-                            Swal.fire(
-                                'Updated!',
-                                'Booking status has been updated.',
-                                'success'
-                            ).then(() => {
-                                location.reload();
-                            });
-                        },
-                        error: function() {
-                            Swal.fire(
-                                'Error!',
-                                'An error occurred while updating the booking status.',
-                                'error'
-                            );
-                        }
-                    });
-                }
-            });
-
-            $('.take-money-btn').on('click', function() {
-                var bookingId = $(this).data('booking-id');
-                $('#bookingIdInput').val(bookingId);
-                $('#takeMoneyModal').modal('show');
-            });
-        });
-    </script>
-
     <?php
     require './includes/footer.php';
-    ?>
-
-    <?php
     $stmt_pitch->close();
     $stmt_recurring_bookings->close();
     $conn->close();

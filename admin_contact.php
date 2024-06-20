@@ -35,6 +35,7 @@ error_reporting(E_ALL);
                         <a href="admin_dashboard" class="nav-item nav-link active">Home</a>
                         <a href="iixidh" class="nav-item nav-link">Iixidh</a>
                         <a href="customers" class="nav-item nav-link">Past Booking</a>
+                        <a href="reports" class="nav-item nav-link">Reports</a>
                         <a href="admin_contact" class="nav-item nav-link active">Contact</a>
                     </div>
                     <div class="d-flex m-3 me-0">

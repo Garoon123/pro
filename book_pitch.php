@@ -6,7 +6,7 @@ session_start();
 function hasBookedToday($userId, $conn)
 {
     $today = date('Y-m-d'); // Get today's date
-    $query = "SELECT COUNT(*) AS booking_count FROM bookings WHERE user_id = ? AND booking_date = ?";
+    $query = "SELECT COUNT(*) AS booking_count FROM bookings WHERE user_id = ? AND booking_date = ? and status != 'cancelled'";
     $stmt = $conn->prepare($query);
     $stmt->bind_param("is", $userId, $today);
     $stmt->execute();
@@ -36,7 +36,7 @@ if (isset($_POST['phone_number'], $_POST['available_time'], $_POST['pitch_id'], 
             $total_price = $_POST['price_per_hour'];
             $booking_status = 'pending';
 
-            $booking_query = "INSERT INTO bookings (user_id, pitch_id, booking_date, start_time, end_time, total_price, booking_status, phone_number) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
+            $booking_query = "INSERT INTO bookings (user_id, pitch_id, booking_date, start_time, end_time, total_price, booking_status, phone_number,payed) VALUES (?, ?, ?, ?, ?, ?, ?, ?,0)";
             $stmt = $conn->prepare($booking_query);
             $stmt->bind_param("iissssss", $user_id, $pitch_id, $booking_date, $start_time, $end_time, $total_price, $booking_status, $phone_number);
 

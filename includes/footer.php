@@ -1,9 +1,17 @@
-<div class="container-fluid bg-dark text-white-50 footer py-3">
+<style>
+    .footer {
+        position: fixed;
+        bottom: 0;
+        width: 100%;
+    }
+</style>
+
+<div class="container-fluid bg-dark text-white-50 footer">
     <div class="container">
         <div class="d-flex justify-content-between align-items-center">
             <div>
-                <a href="#" class="text-primary">
-                    <h1 class="mb-0">Garoon - Kireeye</h1>
+                <a href="garoono.com" class="text-primary">
+                    <h1 class="mb-0">Garoon.com</h1>
                 </a>
             </div>
             <div class="d-flex">

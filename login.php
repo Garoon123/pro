@@ -57,7 +57,8 @@ if (isset($_POST['submit'])) {
                     setcookie('remember_token', $token, time() + (86400 * 30), "/"); // 30 days
                 }
                 if ($_SESSION['user_type'] == 'admin') {
-                    header('Location: admin_dashboard');
+                    $_SESSION['pitch_id'] = $user['pitch_id'];
+                    header('Location: test');
                 } else {
                     header("Location: index");
                     exit();

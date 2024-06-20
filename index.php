@@ -73,10 +73,10 @@ require './includes/conn.php';
             <div class="carousel-item active">
                 <div class="carousel-content d-flex flex-column align-items-center justify-content-center position-relative text-center">
                     <div class="carousel-text mb-3">
-                        <h4 class="text-white">100% Organic Foods</h4>
-                        <h1 class="display-3 text-white">Organic Veggies & Fruits Foods</h1>
+                        <h4 class="text-white">Garoono.com</h4>
+                        <h1 class="display-3 text-white">waxaad ka kiraysan kartaa</h1>
                     </div>
-                    <img src="img/pitch1.jpg" class="d-block w-100" alt="Image 1">
+                    <img src="img/pitch2.jpg" class="d-block w-100" alt="Image 1">
                     <div class="carousel-buttons mt-3">
                         <!-- <a href="#" class="btn btn-secondary px-4 py-2">Learn More</a> -->
                     </div>
@@ -85,10 +85,10 @@ require './includes/conn.php';
             <div class="carousel-item">
                 <div class="carousel-content d-flex flex-column align-items-center justify-content-center position-relative text-center">
                     <div class="carousel-text mb-3">
-                        <h4 class="text-white">100% Organic Foods</h4>
-                        <h1 class="display-3 text-white">Organic Veggies & Fruits Foods</h1>
+                        <h4 class="text-white">Garoonada ugu wanaagsan</h4>
+                        <h1 class="display-3 text-white">Hadba goobta aad joogto</h1>
                     </div>
-                    <img src="img/pitch2.jpg" class="d-block w-100" alt="Image 2">
+                    <img src="img/pitch4.jpg" class="d-block w-100" alt="Image 2">
                     <div class="carousel-buttons mt-3">
                         <!-- <a href="#" class="btn btn-secondary px-4 py-2">Learn More</a> -->
                     </div>
@@ -97,39 +97,16 @@ require './includes/conn.php';
             <div class="carousel-item">
                 <div class="carousel-content d-flex flex-column align-items-center justify-content-center position-relative text-center">
                     <div class="carousel-text mb-3">
-                        <h4 class="text-white">100% Organic Foods</h4>
-                        <h1 class="display-3 text-white">Organic Veggies & Fruits Foods</h1>
+                        <h4 class="text-white">Noogu kaalay </h4>
+                        <h1 class="display-3 text-white">Adeeg hufan iyo Soodhawayn</h1>
                     </div>
-                    <img src="img/pitch3.jpg" class="d-block w-100" alt="Image 3">
+                    <img src="img/pitch5.jpg" class="d-block w-100" alt="Image 3">
                     <div class="carousel-buttons mt-3">
                         <!-- <a href="#" class="btn btn-secondary px-4 py-2">Learn More</a> -->
                     </div>
                 </div>
             </div>
-            <div class="carousel-item">
-                <div class="carousel-content d-flex flex-column align-items-center justify-content-center position-relative text-center">
-                    <div class="carousel-text mb-3">
-                        <h4 class="text-white">100% Organic Foods</h4>
-                        <h1 class="display-3 text-white">Organic Veggies & Fruits Foods</h1>
-                    </div>
-                    <img src="img/pitch4.jpg" class="d-block w-100" alt="Image 4">
-                    <div class="carousel-buttons mt-3">
-                        <!-- <a href="#" class="btn btn-secondary px-4 py-2">Learn More</a> -->
-                    </div>
-                </div>
-            </div>
-            <div class="carousel-item">
-                <div class="carousel-content d-flex flex-column align-items-center justify-content-center position-relative text-center">
-                    <div class="carousel-text mb-3">
-                        <h4 class="text-white">100% Organic Foods</h4>
-                        <h1 class="display-3 text-white">Organic Veggies & Fruits Foods</h1>
-                    </div>
-                    <img src="img/pitch5.jpg" class="d-block w-100" alt="Image 5">
-                    <div class="carousel-buttons mt-3">
-                        <!-- <a href="#" class="btn btn-secondary px-4 py-2">Learn More</a> -->
-                    </div>
-                </div>
-            </div>
+
         </div>
         <button class="carousel-control-prev bg-warning" type="button" data-bs-target="#heroCarousel" data-bs-slide="prev">
             <span class="carousel-control-prev-icon" aria-hidden="true"></span>
